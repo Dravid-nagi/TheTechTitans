@@ -1,0 +1,95 @@
+import speech_recognition as sr
+import pyttsx3
+import pywhatkit
+import datetime
+import wikipedia
+from googletrans import Translator
+
+listener = sr.Recognizer()
+engine = pyttsx3.init()
+voices = engine.getProperty('voices')
+engine.setProperty('voice', voices[1].id)
+translator = Translator()
+
+def talk(text):
+    engine.say(text)
+    engine.runAndWait()
+
+# def translate_to_english(text):
+#     translated = translator.translate(text, src='auto', dest='en')
+#     return translated.text
+
+def translate_to_hindi(text):
+    translated = translator.translate(text, src='en', dest='hi')  # Translate from English (en) to Hindi (hi)
+    return translated.text
+
+def take_command():
+    command = ""
+    try:
+        with sr.Microphone() as source:
+            print('Listening...')
+            voice = listener.listen(source)
+            command = listener.recognize_google(voice)
+            command = command.lower()
+            print(command)
+    except sr.UnknownValueError:
+        print("Google Speech Recognition could not understand audio")
+    except sr.RequestError as e:
+        print(f"Could not request results from Google Speech Recognition service; {e}")
+    return command
+
+def run_alexa():
+    command = take_command()
+    if 'play a video for water waste management' in command:
+        song = command.replace('play', '')
+        talk('Playing ' + song)
+        pywhatkit.playonyt(song)
+    elif "hello" in command:
+        talk('Hi, welcome to Bubble - your own water bodies cleanliness system.')
+    elif 'time' in command:
+        time = datetime.datetime.now().strftime('%I:%M %p')
+        talk('Current time is ' + time)
+    elif 'river' in command:
+        talk('Which language would you like the information in?')
+        language_command = take_command()
+        
+        if language_command is not None:
+            # translated_language = translate_to_english(language_command) 
+            if 'english' in language_command:
+                river = 'yamuna river'
+                info = wikipedia.summary(river, 1)
+                if info is not None:
+                    print(info)
+                    talk(info)
+                else:
+                    talk("Sorry, I couldn't find information about the river.")
+            if 'hindi' in language_command:
+                river = 'yamuna river'
+                info = wikipedia.summary(river, 1)
+                if info is not None:
+                    translated_info = translate_to_hindi(info)
+                    if translated_info is not None:
+                        print(translated_info)
+                        talk(translated_info)
+                    else:
+                        talk("Sorry, I couldn't find information about the river.")
+    
+    elif 'i have a query about water management system' in command:
+        talk('What is your query?')
+        query = take_command()
+        if 'measures for cleanliness' in query:
+            measures = 'measures for cleanliness of water bodies'
+            info = wikipedia.summary(measures, 1)
+            print(info)
+            talk(info)
+        elif 'major conditions that can create an unhealthy environment around water bodies' in query:
+            conditions = 'major conditions that can create an unhealthy environment around water bodies'
+            info = wikipedia.summary(conditions, 1)
+            print(info)
+            talk(info)
+    else:
+        talk('Sorry, I could not understand your command. Please say it again.')
+
+
+while True:
+    run_alexa()

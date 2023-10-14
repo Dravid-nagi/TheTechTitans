@@ -1,0 +1,52 @@
+import pygame
+import cv2
+
+# Initialize pygame
+pygame.init()
+
+# Set the dimensions of the screen
+screen_width = 1920
+screen_height = 1080
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption('bubble')
+
+# Create a dedicated surface for the video
+video_surface = pygame.Surface((screen_width, screen_height))
+
+while True:
+    cap = cv2.VideoCapture('abcde.mp4', cv2.CAP_FFMPEG)  # Open the video capture inside the loop
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            cap.release()
+            pygame.quit()
+
+    while cap.isOpened():  # Loop to play the video until it's closed
+        ret, frame = cap.read()
+
+        if not ret:
+            # If the video reaches the end, go back to the beginning
+            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            continue
+
+        # Rotate the frame 90 degrees clockwise (for portrait to landscape)
+        frame = cv2.transpose(frame)
+        frame = cv2.flip(frame, flipCode=0)  # Flip horizontally
+
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame = pygame.surfarray.make_surface(frame)
+
+        # Blit the video frame onto the video_surface
+        video_surface.blit(frame, (0, 0))
+
+        # Blit the video_surface onto the main screen
+        screen.blit(video_surface, (0, 0))
+        pygame.display.update()
+
+        pygame.time.delay(33)  # Control the frame rate (adjust as needed)
+
+    # Release the video capture inside the loop
+    cap.release()
+
+# Quit pygame outside the main loop
+pygame.quit()
